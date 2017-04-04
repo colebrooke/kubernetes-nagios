@@ -62,7 +62,7 @@ for NODE in ${NODES[*]}; do
 	for CHECK in ${CHECKS[*]}; do
 		STATUS=$(echo "$K8STATUS" | jq '.items[] | select(.metadata.name=="'$NODE'") | .status.conditions[]'  | jq -r 'select(.type=="'$CHECK'") .status')
 		case "$CHECK-$STATUS" in
-			"OutOfDisk-False") returnResult Warning;;
+			"OutOfDisk-True") returnResult Warning;;
 			"MemoryPressure-True") returnResult Critical;;
 			"DiskPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
