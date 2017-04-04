@@ -10,17 +10,37 @@
 #                                                       #
 #########################################################
 
-## TODO: check dependancies
-## TODO: verify API endpoint
-## TODO: add these as script arguments
-TARGET="https://your-kubernetes-endpoint.co.uk"
-CREDS="~/kube8-creds"
+type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for this script to run."; exit 2; }
+
+function usage {
+cat <<EOF
+
+Credentials file format:
+machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
+
+Usage ./check_kube_nodes.sh -t <TARGETSERVER> -c <CREDENTIALSFILE>
+
+EOF
+
+exit 2
+}
+
+while getopts ":t:c:h" OPTIONS; do
+        case "${OPTIONS}" in
+                t) TARGET=${OPTARG} ;;
+                c) CREDENTIALS_FILE=${OPTARG} ;;
+                h) usage ;;
+                *) usage ;;
+        esac
+done
+
 
 SSL="--insecure"
 EXITCODE=0
 
 # Make call to Kubernetes API to get the status:
-K8STATUS="$(curl -sS $SSL --netrc-file ~/kube8-creds $TARGET/api/v1/nodes)"
+K8STATUS="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/nodes)"
+if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 2; fi
 
 # Derive nodes from the json returned by the API
 NODES=$(echo "$K8STATUS" | jq -r '.items[].metadata.name')
@@ -46,6 +66,7 @@ for NODE in ${NODES[*]}; do
 			"MemoryPressure-True") returnResult Critical;;
 			"DiskPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
+			# Note the API only checks these 4 conditions at present. Others can be added here.
 			*) : ;;
 		esac
 	done
