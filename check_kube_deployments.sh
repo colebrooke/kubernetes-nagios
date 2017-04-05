@@ -4,8 +4,8 @@
 #       ./check_kube_deployments.sh			#
 #                                                       #
 #       Nagios check script for kubernetes cluster      #
-#	nodes.  Uses API to check status for each	#
-#	node.						#
+#	deployments.  Uses API to check status for	#
+#	each deployments				#
 #       Author:  Justin Miller                          #
 #                                                       #
 #########################################################
@@ -48,6 +48,7 @@ function returnResult () {
 	RESULT=$(echo -e "$CHECKSTATUS: $DEPLOYMENT has condition $TYPE: $STATUS - $REASON\n$RESULT")
 	if [[ "$CHECKSTATUS" == "Critical" ]] && [ $EXITCODE -le 2 ]; then EXITCODE=2; fi
 	if [[ "$CHECKSTATUS" == "Warning" ]] && [ $EXITCODE -eq 0 ]; then EXITCODE=1; fi
+	if [[ "$CHECKSTATUS" == "Unknown" ]] && [ $EXITCODE -eq 0 ]; then EXITCODE=3; fi
 	}
 
 # Itterate through each namespace
@@ -60,10 +61,12 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 		TYPE=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions[].type' )
 		STATUS=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions[].status' )
 		REASON=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions[].message' )
-		case "$TYPE-$STATUS" in
-			"Avilability-True") returnResult OK;;
-			"Avilability-False") returnResult Warning;;
-			*) returnResult OK ;;
+		# uncomment the following line to test a failure:
+		# if [[ "$DEPLOYMENT" == "kubernetes-dashboard" ]]; then TYPE="Available"; STATUS="False"; fi
+		case "${TYPE}-${STATUS}" in
+			"Available-True") returnResult OK;;
+			"Available-False") returnResult Warning;;
+			*) returnResult Unknown ;;
 		esac
 	done
 done

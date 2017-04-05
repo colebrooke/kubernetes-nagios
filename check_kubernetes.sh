@@ -33,10 +33,10 @@ while getopts ":t:c:h" OPTIONS; do
 	esac
 done
 
-HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE https://$TARGET/healthz)
-BSC_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE https://$TARGET/healthz/poststarthook/bootstrap-controller)
-EXT_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE https://$TARGET/healthz/poststarthook/extensions/third-party-resources)
-BSR_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE https://$TARGET/healthz/poststarthook/rbac/bootstrap-roles)
+HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz)
+BSC_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/bootstrap-controller)
+EXT_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/extensions/third-party-resources)
+BSR_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/rbac/bootstrap-roles)
 
 
 case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in 
