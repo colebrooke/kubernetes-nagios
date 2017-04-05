@@ -5,7 +5,7 @@
 #                                                       #
 #       Nagios check script for kubernetes cluster      #
 #	deployments.  Uses API to check status for	#
-#	each deployments				#
+#	each deployment.				#
 #       Author:  Justin Miller                          #
 #                                                       #
 #########################################################
