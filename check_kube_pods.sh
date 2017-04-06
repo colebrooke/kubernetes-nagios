@@ -90,6 +90,8 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 			TYPE_STATUS=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | select(.type=="'$TYPE'") | .status')
 			if [[ "${TYPE_STATUS}" != "True" ]]; then
 				returnResult Warning "Pod: $POD  $TYPE: $TYPE_STATUS"
+			else
+				returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"
 			fi
 		done
 		CONTAINERS=$(echo "$POD_STATUS" | jq -r '.status.containerStatuses[].name')
