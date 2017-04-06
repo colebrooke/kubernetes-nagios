@@ -14,14 +14,16 @@ type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for 
 
 function usage {
 cat <<EOF
+Usage ./check_kube_deployments.sh -t <TARGETSERVER> -c <CREDENTIALSFILE>
+
+Options:
+  -t <TARGETSERVER>     # Required, the endpoint for your Kubernetes API
+  -c <CREDENTIALSFILE>  # Required, credentials for your Kubernetes API, in the format outlined below
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
 
-Usage ./check_kube_deployments.sh -t <TARGETSERVER> -c <CREDENTIALSFILE>
-
 EOF
-
 exit 2
 }
 
@@ -37,6 +39,7 @@ done
 if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
 if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
 
+# Comment out if you have SSL enabled on your K8 API
 SSL="--insecure"
 EXITCODE=0
 

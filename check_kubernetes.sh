@@ -13,11 +13,14 @@
 
 function usage {
 cat <<EOF
+Usage ./check_kubernetes -t <TARGETSERVER> -c <CREDENTIALSFILE>
+
+Options:
+  -t <TARGETSERVER>     # Required, the endpoint for your Kubernetes API
+  -c <CREDENTIALSFILE>  # Required, credentials for your Kubernetes API, in the format outlined below
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
-
-Usage ./check_kubernetes -t <TARGETSERVER> -c <CREDENTIALSFILE>
 
 EOF
 

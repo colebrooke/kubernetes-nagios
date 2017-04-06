@@ -30,6 +30,7 @@ EOF
 exit 2
 }
 
+# Comment out if you have SSL enabled on your K8 API
 SSL="--insecure"
 EXITCODE=0
 # Default thresholds for container restarts
