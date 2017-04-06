@@ -34,6 +34,8 @@ while getopts ":t:c:h" OPTIONS; do
         esac
 done
 
+if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
+if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
 
 SSL="--insecure"
 EXITCODE=0

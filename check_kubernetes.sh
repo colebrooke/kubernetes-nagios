@@ -24,6 +24,9 @@ EOF
 exit 2
 }
 
+# Comment out if you have SSL enabled on your K8 API
+SSL="--insecure"
+
 while getopts ":t:c:h" OPTIONS; do
 	case "${OPTIONS}" in
 		t) TARGET=${OPTARG} ;;
@@ -33,10 +36,13 @@ while getopts ":t:c:h" OPTIONS; do
 	esac
 done
 
-HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz)
-BSC_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/bootstrap-controller)
-EXT_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/extensions/third-party-resources)
-BSR_HEALTH=$(curl -sS --insecure --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/rbac/bootstrap-roles)
+if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
+if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
+
+HEALTH=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/healthz)
+BSC_HEALTH=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/bootstrap-controller)
+EXT_HEALTH=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/extensions/third-party-resources)
+BSR_HEALTH=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/healthz/poststarthook/rbac/bootstrap-roles)
 
 
 case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in 

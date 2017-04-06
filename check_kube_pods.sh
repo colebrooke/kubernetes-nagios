@@ -13,14 +13,20 @@ type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for 
 
 function usage {
 cat <<EOF
+Usage: 
+  ./check_kube_pods.sh -t <TARGETSERVER> -c <CREDENTIALSFILE> [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD]
+
+Options:
+  -t <TARGETSERVER>	# Required, the endpoint for your Kubernetes API
+  -c <CREDENTIALSFILE>	# Required, credentials for your Kubernetes API, in the format outlined below
+  -n <NAMESPACE>	# Namespace to check, for example, "kube-system". By default all are checked.
+  -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 1]
+  -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 5]
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
 
-Usage ./check_kube_pods.sh -t <TARGETSERVER> -c <CREDENTIALSFILE>
-
 EOF
-
 exit 2
 }
 
@@ -28,7 +34,7 @@ SSL="--insecure"
 EXITCODE=0
 # Default thresholds for container restarts
 WARN_THRESHOLD=1
-CRIT_THRESHOLD=4
+CRIT_THRESHOLD=5
 
 while getopts ":t:c:h:w:C:n:" OPTIONS; do
         case "${OPTIONS}" in
@@ -41,6 +47,10 @@ while getopts ":t:c:h:w:C:n:" OPTIONS; do
                 *) usage ;;
         esac
 done
+
+if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
+if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
+
 WARN_THRESHOLD=$(($WARN_THRESHOLD + 0))
 CRIT_THRESHOLD=$(($CRIT_THRESHOLD + 0))
 ####NAMESPACE_TARGET=$(echo "$NAMESPACE_TARGET" | xargs) 
