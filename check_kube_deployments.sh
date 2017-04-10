@@ -19,6 +19,7 @@ Usage ./check_kube_deployments.sh -t <TARGETSERVER> -c <CREDENTIALSFILE>
 Options:
   -t <TARGETSERVER>     # Required, the endpoint for your Kubernetes API
   -c <CREDENTIALSFILE>  # Required, credentials for your Kubernetes API, in the format outlined below
+  -n <NAMESPACE>        # Namespace to check, for example, "kube-system". By default all are checked.
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
@@ -27,10 +28,11 @@ EOF
 exit 2
 }
 
-while getopts ":t:c:h" OPTIONS; do
+while getopts ":t:c:h:n:" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
+		n) NAMESPACE_TARGET=${OPTARG} ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -44,9 +46,13 @@ SSL="--insecure"
 EXITCODE=0
 
 # Make call to Kubernetes API to get the list of namespaces:
-NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
-if [ $(echo "$NAMESPACES" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 2; fi
-NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
+if [[ -z $NAMESPACE_TARGET ]]; then
+        NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
+	if [ $(echo "$NAMESPACES" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 2; fi
+        NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
+else
+        NAMESPACES="$NAMESPACE_TARGET"
+fi
 
 function returnResult () {
 	CHECKSTATUS="$1"
