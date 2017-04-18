@@ -36,16 +36,22 @@ while getopts ":t:c:h" OPTIONS; do
         esac
 done
 
-if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
-if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
+if [ ! -z $TARGET ] && [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
 
 # Comment out if you have SSL enabled on your K8 API
 SSL="--insecure"
 EXITCODE=0
 
-# Make call to Kubernetes API to get the status:
-K8STATUS="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/nodes)"
-if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 2; fi
+if [ -z $TARGET ]; then
+	# kubectl mode
+	K8STATUS="$(kubectl get nodes -o json)"
+	if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes via kubectl!"; exit 3; fi
+else
+	# k8 API mode
+	# Make call to Kubernetes API to get the status:
+	K8STATUS="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/nodes)"
+	if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 3; fi
+fi
 
 # Derive nodes from the json returned by the API
 NODES=$(echo "$K8STATUS" | jq -r '.items[].metadata.name')
@@ -72,13 +78,13 @@ for NODE in ${NODES[*]}; do
 			"DiskPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
 			# Note the API only checks these 4 conditions at present. Others can be added here.
-			*) : ;;
+			*) returnResult OK;;
 		esac
 	done
 done
 
 case $EXITCODE in
-	0) printf "OK - Kubernetes nodes all OK" ;;
+	0) printf "OK - Kubernetes nodes all OK\n" ;;
 	1) printf "WARNING - One or more nodes show warning status!\n" ;;
 	2) printf "CRITICAL - One or more nodes show critical status!\n" ;;
 esac
