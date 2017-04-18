@@ -4,8 +4,9 @@
 #       ./check_kube_nodes.sh                           #
 #                                                       #
 #       Nagios check script for kubernetes cluster      #
-#	nodes.  Uses API to check status for each	#
-#	node.						#
+#	nodes.  Uses kubectl or API to check status	#
+#	on each k8 node.				#
+#							#
 #       Author:  Justin Miller                          #
 #                                                       #
 #########################################################
@@ -14,11 +15,11 @@ type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for 
 
 function usage {
 cat <<EOF
-Usage ./check_kube_nodes.sh -t <TARGETSERVER> -c <CREDENTIALSFILE>
+Usage ./check_kube_nodes.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>]
 
 Options:
-  -t <TARGETSERVER>     # Required, the endpoint for your Kubernetes API
-  -c <CREDENTIALSFILE>  # Required, credentials for your Kubernetes API, in the format outlined below
+  -t <TARGETSERVER>     # Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
+  -c <CREDENTIALSFILE>  # Required if a <TARGETSERVER> API is specified, in the format outlined below
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE

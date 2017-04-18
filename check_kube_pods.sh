@@ -4,7 +4,9 @@
 #       ./check_kube_pods.sh				#
 #                                                       #
 #       Nagios check script for kubernetes cluster      #
-#	pods.  Uses API to check status for each pod.	#
+#	pods.  Uses kubectl or API to check status	#
+#	for each pod.					#
+#							#
 #       Author:  Justin Miller                          #
 #                                                       #
 #########################################################
