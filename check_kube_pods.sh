@@ -14,11 +14,11 @@ type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for 
 function usage {
 cat <<EOF
 Usage: 
-  ./check_kube_pods.sh -t <TARGETSERVER> -c <CREDENTIALSFILE> [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD]
+  ./check_kube_pods.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD]
 
 Options:
-  -t <TARGETSERVER>	# Required, the endpoint for your Kubernetes API
-  -c <CREDENTIALSFILE>	# Required, credentials for your Kubernetes API, in the format outlined below
+  -t <TARGETSERVER>	# Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
+  -c <CREDENTIALSFILE>	# Required if a <TARGETSERVER> API is specified, in the format outlined below
   -n <NAMESPACE>	# Namespace to check, for example, "kube-system". By default all are checked.
   -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 1]
   -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 5]
