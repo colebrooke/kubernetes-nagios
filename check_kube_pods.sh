@@ -49,19 +49,34 @@ while getopts ":t:c:h:w:C:n:" OPTIONS; do
         esac
 done
 
-if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
-if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
+
+
+if [ ! -z $TARGET ] && [ -z $CREDENTIALS_FILE ]; then 
+	echo "Required argument -c <CREDENTIALSFILE> missing when specifing -t <TARGET>";
+	exit 3; 
+fi
 
 WARN_THRESHOLD=$(($WARN_THRESHOLD + 0))
 CRIT_THRESHOLD=$(($CRIT_THRESHOLD + 0))
 ####NAMESPACE_TARGET=$(echo "$NAMESPACE_TARGET" | xargs) 
 
-# Make call to Kubernetes API to get the list of namespaces:
-if [[ -z $NAMESPACE_TARGET ]]; then 
-	NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
-	NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
+if [[ -z $TARGET ]]; then
+	# use kubectl when no API endpoint is specified
+	type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run if no API endpoint is specified"; exit 3; }
+	if [[ -z $NAMESPACE_TARGET ]]; then
+		ALL_NAMESPACE_OPTION="--all-namespaces"
+	else
+		NAMESPACES="$NAMESPACE_TARGET"
+	fi
 else
-	NAMESPACES="$NAMESPACE_TARGET"
+	# API target has been specified
+	# Make call to Kubernetes API to get the list of namespaces:
+	if [[ -z $NAMESPACE_TARGET ]]; then 
+		NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
+		NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
+	else
+		NAMESPACES="$NAMESPACE_TARGET"
+	fi
 fi
 
 
@@ -74,16 +89,25 @@ function returnResult () {
 
 # Itterate through each namespace
 for NAMESPACE in ${NAMESPACES[*]}; do
+
 	# get deployments data for the namespace
-	PODS_STATUS=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces/$NAMESPACE/pods)
-	if [ $(echo "$PODS_STATUS" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 2; fi
-######	echo "$PODS_STATUS" && exit
+	if [[ -z $TARGET ]]; then
+		# kubectl mode
+		if [ -z $ALL_NAMESPACE_OPTION ]; then NAMESPACE="--namespace $NAMESPACE"; fi
+		PODS_STATUS=$(kubectl get pods $ALL_NAMESPACE_OPTION $NAMESPACE -o json)
+	else
+		# api mode
+		PODS_STATUS=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces/$NAMESPACE/pods)
+	fi
+	if [ $(echo "$PODS_STATUS" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to kubernetes cluster!"; exit 3; fi
+
+	# for debugging
+	#echo "$PODS_STATUS" && exit
+
 	PODS=$(echo "$PODS_STATUS" | jq -r '.items[].metadata.name')
-	# Itterate through each deployment
+	# Itterate through each pod
 	for POD in ${PODS[*]}; do
-		###
 		POD_STATUS=$(echo "$PODS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$POD'")')
-		###
 		POD_CONDITION_TYPES=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | .type')
 		# Itterate through each condition type
 		for TYPE in ${POD_CONDITION_TYPES[*]}; do
