@@ -22,8 +22,10 @@ Options:
   -t <TARGETSERVER>	# Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
   -c <CREDENTIALSFILE>	# Required if a <TARGETSERVER> API is specified, in the format outlined below
   -n <NAMESPACE>	# Namespace to check, for example, "kube-system". By default all are checked.
-  -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 1]
-  -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 5]
+  -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 5]
+  -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 50]
+  -h			# Show usage / help
+  -v			# Show verbose output
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
@@ -36,16 +38,17 @@ exit 2
 SSL="--insecure"
 EXITCODE=0
 # Default thresholds for container restarts
-WARN_THRESHOLD=1
-CRIT_THRESHOLD=5
+WARN_THRESHOLD=5
+CRIT_THRESHOLD=50
 
-while getopts ":t:c:h:w:C:n:" OPTIONS; do
+while getopts ":t:c:hw:C:n:v" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
 		w) WARN_THRESHOLD=${OPTARG} ;;
 		C) CRIT_THRESHOLD=${OPTARG} ;;
 		n) NAMESPACE_TARGET=${OPTARG} ;;
+		v) VERBOSE="true" ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -60,20 +63,21 @@ fi
 
 WARN_THRESHOLD=$(($WARN_THRESHOLD + 0))
 CRIT_THRESHOLD=$(($CRIT_THRESHOLD + 0))
-####NAMESPACE_TARGET=$(echo "$NAMESPACE_TARGET" | xargs) 
 
 if [[ -z $TARGET ]]; then
 	# use kubectl when no API endpoint is specified
 	type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run if no API endpoint is specified"; exit 3; }
 	if [[ -z $NAMESPACE_TARGET ]]; then
-		ALL_NAMESPACE_OPTION="--all-namespaces"
+		ALL_NAMESPACE_OPTION="true"
+		# should return all namespaces even when we set namespaces to default
+		NAMESPACES="default"
 	else
 		NAMESPACES="$NAMESPACE_TARGET"
 	fi
 else
 	# API target has been specified
 	# Make call to Kubernetes API to get the list of namespaces:
-	if [[ -z $NAMESPACE_TARGET ]]; then 
+	if [[ -z $NAMESPACE_TARGET ]] && [[ ! -z $TARGET ]]; then 
 		NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
 		NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
 	else
@@ -91,12 +95,15 @@ function returnResult () {
 
 # Itterate through each namespace
 for NAMESPACE in ${NAMESPACES[*]}; do
-
 	# get deployments data for the namespace
 	if [[ -z $TARGET ]]; then
 		# kubectl mode
-		if [ -z $ALL_NAMESPACE_OPTION ]; then NAMESPACE="--namespace $NAMESPACE"; fi
-		PODS_STATUS=$(kubectl get pods $ALL_NAMESPACE_OPTION $NAMESPACE -o json)
+		if [[ "$ALL_NAMESPACE_OPTION" == "true" ]]; then
+			PODS_STATUS=$(kubectl get pods --all-namespaces -o json)
+		else
+			PODS_STATUS=$(kubectl get pods --namespace $NAMESPACE -o json)
+		fi
+		
 	else
 		# api mode
 		PODS_STATUS=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces/$NAMESPACE/pods)
@@ -117,7 +124,7 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 			if [[ "${TYPE_STATUS}" != "True" ]]; then
 				returnResult Warning "Pod: $POD  $TYPE: $TYPE_STATUS"
 			else
-				returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"
+				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
 			fi
 		done
 		CONTAINERS=$(echo "$POD_STATUS" | jq -r '.status.containerStatuses[].name')
@@ -130,6 +137,8 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 				returnResult Warning "Pod: $POD   Container: $CONTAINER    Ready: $CONTAINER_READY   Restarts: $CONTAINER_RESTARTS"
 			elif (( $CONTAINER_RESTARTS > $CRIT_THRESHOLD )); then
 				returnResult Critical "Pod: $POD   Container: $CONTAINER    Ready: $CONTAINER_READY   Restarts: $CONTAINER_RESTARTS"
+			elif (( $CONTAINER_RESTARTS > 0 )); then
+				returnResult OK "Pod: $POD   Container: $CONTAINER    Ready: $CONTAINER_READY   Restarts: $CONTAINER_RESTARTS"
 			fi
 		done	
 	done
