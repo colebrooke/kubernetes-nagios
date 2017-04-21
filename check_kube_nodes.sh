@@ -29,7 +29,7 @@ EOF
 exit 2
 }
 
-while getopts ":t:c:h" OPTIONS; do
+while getopts ":t:c:k:h" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
