@@ -16,7 +16,7 @@ type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for 
 function usage {
 cat <<EOF
 Usage: 
-  ./check_kube_pods.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD]
+  ./check_kube_pods.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>] [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD]
 
 Options:
   -t <TARGETSERVER>	# Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
@@ -24,6 +24,7 @@ Options:
   -n <NAMESPACE>	# Namespace to check, for example, "kube-system". By default all are checked.
   -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 5]
   -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 50]
+  -k <KUBE_CONFIG>	# Path to kube config file if using kubectl
   -h			# Show usage / help
   -v			# Show verbose output
 
@@ -41,7 +42,7 @@ EXITCODE=0
 WARN_THRESHOLD=5
 CRIT_THRESHOLD=50
 
-while getopts ":t:c:hw:C:n:v" OPTIONS; do
+while getopts ":t:c:hw:C:n:k:v" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
@@ -49,6 +50,7 @@ while getopts ":t:c:hw:C:n:v" OPTIONS; do
 		C) CRIT_THRESHOLD=${OPTARG} ;;
 		n) NAMESPACE_TARGET=${OPTARG} ;;
 		v) VERBOSE="true" ;;
+		k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -99,9 +101,9 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	if [[ -z $TARGET ]]; then
 		# kubectl mode
 		if [[ "$ALL_NAMESPACE_OPTION" == "true" ]]; then
-			PODS_STATUS=$(kubectl get pods --all-namespaces -o json)
+			PODS_STATUS=$(kubectl $KUBE_CONFIG get pods --all-namespaces -o json)
 		else
-			PODS_STATUS=$(kubectl get pods --namespace $NAMESPACE -o json)
+			PODS_STATUS=$(kubectl $KUBE_CONFIG get pods --namespace $NAMESPACE -o json)
 		fi
 		
 	else

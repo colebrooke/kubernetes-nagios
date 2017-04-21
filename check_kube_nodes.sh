@@ -15,11 +15,12 @@ type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for 
 
 function usage {
 cat <<EOF
-Usage ./check_kube_nodes.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>]
+Usage ./check_kube_nodes.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>]
 
 Options:
   -t <TARGETSERVER>     # Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
   -c <CREDENTIALSFILE>  # Required if a <TARGETSERVER> API is specified, in the format outlined below
+  -k <KUBE_CONFIG>      # Path to kube config file if using kubectl
 
 Credentials file format:
 machine yourEndPointOrTarget login yourUserNameHere password YOURPASSWORDHERE
@@ -32,6 +33,7 @@ while getopts ":t:c:h" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
+                k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -45,7 +47,7 @@ EXITCODE=0
 
 if [ -z $TARGET ]; then
 	# kubectl mode
-	K8STATUS="$(kubectl get nodes -o json)"
+	K8STATUS="$(kubectl $KUBE_CONFIG get nodes -o json)"
 	if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes via kubectl!"; exit 3; fi
 else
 	# k8 API mode

@@ -28,30 +28,45 @@ EOF
 exit 2
 }
 
-while getopts ":t:c:h:n:" OPTIONS; do
+while getopts ":t:c:hn:k:" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
 		n) NAMESPACE_TARGET=${OPTARG} ;;
+		k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
 done
 
-if [ -z $TARGET ]; then echo "Required argument -t <TARGET> missing!"; exit 3; fi
-if [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
+if [ ! -z $TARGET ] && [ -z $CREDENTIALS_FILE ]; then
+        echo "Required argument -c <CREDENTIALSFILE> missing when specifing -t <TARGET>";
+        exit 3;
+fi
 
 # Comment out if you have SSL enabled on your K8 API
 SSL="--insecure"
 EXITCODE=0
 
-# Make call to Kubernetes API to get the list of namespaces:
-if [[ -z $NAMESPACE_TARGET ]]; then
-        NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
-	if [ $(echo "$NAMESPACES" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 2; fi
-        NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
+if [[ -z $TARGET ]]; then
+        # use kubectl when no API endpoint is specified
+        type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run if no API endpoint is specified"; exit 3; }
+        if [[ -z $NAMESPACE_TARGET ]]; then
+                ALL_NAMESPACE_OPTION="true"
+                # should return all namespaces even when we set namespaces to default
+                NAMESPACES="default"
+        else
+                NAMESPACES="$NAMESPACE_TARGET"
+        fi
 else
-        NAMESPACES="$NAMESPACE_TARGET"
+        # API target has been specified
+        # Make call to Kubernetes API to get the list of namespaces:
+        if [[ -z $NAMESPACE_TARGET ]] && [[ ! -z $TARGET ]]; then
+                NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
+                NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
+        else
+                NAMESPACES="$NAMESPACE_TARGET"
+        fi
 fi
 
 function returnResult () {
@@ -65,7 +80,18 @@ function returnResult () {
 # Itterate through each namespace
 for NAMESPACE in ${NAMESPACES[*]}; do
 	# get deployments data for the namespace
-	DEPLOYMENTS_STATUS=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/apis/extensions/v1beta1/namespaces/$NAMESPACE/deployments/)
+	if [[ -z $TARGET ]]; then
+		# kubectl mode
+		if [[ "$ALL_NAMESPACE_OPTION" == "true" ]]; then
+			DEPLOYMENTS_STATUS=$(kubectl $KUBE_CONFIG get deployments --all-namespaces -o json)
+		else
+			DEPLOYMENTS_STATUS=$(kubectl $KUBE_CONFIG get deployments --namespace $NAMESPACE -o json)
+		fi
+	else
+		# api mode
+		DEPLOYMENTS_STATUS=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/apis/extensions/v1beta1/namespaces/$NAMESPACE/deployments/)
+	fi
+
 	DEPLOYMENTS=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[].metadata.name')
 	# Itterate through each deployment
 	for DEPLOYMENT in ${DEPLOYMENTS[*]}; do
