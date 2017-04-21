@@ -2,7 +2,6 @@
 
 Some checks for Kubernetes clusters, which can be use with Nagios, Zabbix, Icinga, or any other
 monitoring system that can be configured to use an external shell script.
-
 It's been tested on OSX, Ubuntu and Debian with bash. There are relativley few dependancies, but
 the "jq" utility for processing json is required. If your Kubernetes API is not exposed, the checks
 can use kubectl, in which case this will need to be installed and configured.
