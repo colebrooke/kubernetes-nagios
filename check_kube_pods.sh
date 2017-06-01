@@ -25,6 +25,7 @@ Options:
   -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 5]
   -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 50]
   -k <KUBE_CONFIG>	# Path to kube config file if using kubectl
+  -p <POD>		# Search and check a single POD
   -h			# Show usage / help
   -v			# Show verbose output
 
@@ -42,26 +43,21 @@ EXITCODE=0
 WARN_THRESHOLD=5
 CRIT_THRESHOLD=50
 
-while getopts ":t:c:hw:C:n:k:v" OPTIONS; do
+while getopts ":t:c:hw:C:n:k:p:v" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
-                c) CREDENTIALS_FILE=${OPTARG} ;;
+                c) CREDENTIALS_FILE="--netrc-file ${OPTARG}" ;;
 		w) WARN_THRESHOLD=${OPTARG} ;;
 		C) CRIT_THRESHOLD=${OPTARG} ;;
 		n) NAMESPACE_TARGET=${OPTARG} ;;
 		v) VERBOSE="true" ;;
 		k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
+		p) SINGLE_POD="${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
 done
 
-
-
-if [ ! -z $TARGET ] && [ -z $CREDENTIALS_FILE ]; then 
-	echo "Required argument -c <CREDENTIALSFILE> missing when specifing -t <TARGET>";
-	exit 3; 
-fi
 
 WARN_THRESHOLD=$(($WARN_THRESHOLD + 0))
 CRIT_THRESHOLD=$(($CRIT_THRESHOLD + 0))
@@ -80,7 +76,7 @@ else
 	# API target has been specified
 	# Make call to Kubernetes API to get the list of namespaces:
 	if [[ -z $NAMESPACE_TARGET ]] && [[ ! -z $TARGET ]]; then 
-		NAMESPACES="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
+		NAMESPACES="$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/api/v1/namespaces)"
 		NAMESPACES=$(echo "$NAMESPACES" | jq -r '.items[].metadata.name')
 	else
 		NAMESPACES="$NAMESPACE_TARGET"
@@ -108,17 +104,22 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 		
 	else
 		# api mode
-		PODS_STATUS=$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/namespaces/$NAMESPACE/pods)
+		PODS_STATUS=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/api/v1/namespaces/$NAMESPACE/pods)
 	fi
 	if [ $(echo "$PODS_STATUS" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to kubernetes cluster!"; exit 3; fi
 
 	# for debugging
 	#echo "$PODS_STATUS" && exit
 
-	PODS=$(echo "$PODS_STATUS" | jq -r '.items[].metadata.name')
+	if [ -z $SINGLE_POD ]; then 
+		PODS=$(echo "$PODS_STATUS" | jq -r '.items[].metadata.name')
+	else
+		PODS=$SINGLE_POD
+	fi
+
 	# Itterate through each pod
 	for POD in ${PODS[*]}; do
-		POD_STATUS=$(echo "$PODS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$POD'")')
+		POD_STATUS=$(echo "$PODS_STATUS" | jq -r '.items[] | select(.metadata.name | contains("'$POD'"))')
 		POD_CONDITION_TYPES=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | .type')
 		# Itterate through each condition type
 		for TYPE in ${POD_CONDITION_TYPES[*]}; do
