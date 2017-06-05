@@ -25,7 +25,8 @@ Options:
   -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 5]
   -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 50]
   -k <KUBE_CONFIG>	# Path to kube config file if using kubectl
-  -p <POD>		# Search and check a single POD
+  -p <POD>		# Search for particular pods only
+  -e <NUMBER_PODS>	# Expected number of pods in a ready condition
   -h			# Show usage / help
   -v			# Show verbose output
 
@@ -42,8 +43,10 @@ EXITCODE=0
 # Default thresholds for container restarts
 WARN_THRESHOLD=5
 CRIT_THRESHOLD=50
+EXPECTED_PODS=0
+READY_PODS=0
 
-while getopts ":t:c:hw:C:n:k:p:v" OPTIONS; do
+while getopts ":t:c:hw:C:n:k:p:e:v" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE="--netrc-file ${OPTARG}" ;;
@@ -52,7 +55,8 @@ while getopts ":t:c:hw:C:n:k:p:v" OPTIONS; do
 		n) NAMESPACE_TARGET=${OPTARG} ;;
 		v) VERBOSE="true" ;;
 		k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
-		p) SINGLE_POD="${OPTARG}" ;;
+		p) POD_SEARCH="${OPTARG}" ;;
+		e) EXPECTED_PODS=${OPTARG} ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -111,22 +115,29 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	# for debugging
 	#echo "$PODS_STATUS" && exit
 
-	if [ -z $SINGLE_POD ]; then 
+	if [ -z $POD_SEARCH ]; then 
 		PODS=$(echo "$PODS_STATUS" | jq -r '.items[].metadata.name')
 	else
-		PODS=$SINGLE_POD
+		PODS=$(echo "$PODS_STATUS" | jq -r '.items[].metadata.name'| grep "$POD_SEARCH")
 	fi
 
 	# Itterate through each pod
 	for POD in ${PODS[*]}; do
 		POD_STATUS=$(echo "$PODS_STATUS" | jq -r '.items[] | select(.metadata.name | contains("'$POD'"))')
+		#echo "$POD_STATUS"
+		#echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 		POD_CONDITION_TYPES=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | .type')
+		#echo "$POD_CONDITION_TYPES"
+		#echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 		# Itterate through each condition type
 		for TYPE in ${POD_CONDITION_TYPES[*]}; do
 			TYPE_STATUS=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | select(.type=="'$TYPE'") | .status')
+			#echo "$TYPE_STATUS"
+			#echo "-------------"
 			if [[ "${TYPE_STATUS}" != "True" ]]; then
 				returnResult Warning "Pod: $POD  $TYPE: $TYPE_STATUS"
 			else
+				if [[ "${TYPE}" == "Ready" ]]; then PODS_READY=$((PODS_READY+1)); fi
 				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
 			fi
 		done
@@ -147,11 +158,12 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	done
 done
 
+if (( $EXPECTED_PODS > $PODS_READY )); then returnResult Critical "$POD_SEARCH only has $PODS_READY pods ready, expecting $EXPECTED_PODS!"; fi
 
 case $EXITCODE in
-	0) printf "OK - Kubernetes pods are all OK\n" ;;
-	1) printf "WARNING - One or more pods show warning status!\n" ;;
-	2) printf "CRITICAL - One or more pods show critical status!\n" ;;
+	0) printf "OK - $POD_SEARCH pods are all OK, found $PODS_READY in ready state.\n" ;;
+	1) printf "Warning - $POD_SEARCH pods show warning status, $PODS_READY in ready state.\n" ;;
+	2) printf "Critical - $POD_SEARCH pods show critical status, $PODS_READY in ready state.\n" ;;
 esac
 
 echo "$RESULT"
