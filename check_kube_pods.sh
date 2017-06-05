@@ -112,9 +112,6 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	fi
 	if [ $(echo "$PODS_STATUS" | wc -l) -le 10 ]; then echo "CRITICAL - unable to connect to kubernetes cluster!"; exit 3; fi
 
-	# for debugging
-	#echo "$PODS_STATUS" && exit
-
 	if [ -z $POD_SEARCH ]; then 
 		PODS=$(echo "$PODS_STATUS" | jq -r '.items[].metadata.name')
 	else
@@ -124,11 +121,7 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	# Itterate through each pod
 	for POD in ${PODS[*]}; do
 		POD_STATUS=$(echo "$PODS_STATUS" | jq -r '.items[] | select(.metadata.name | contains("'$POD'"))')
-		#echo "$POD_STATUS"
-		#echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 		POD_CONDITION_TYPES=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | .type')
-		#echo "$POD_CONDITION_TYPES"
-		#echo "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 		# Itterate through each condition type
 		for TYPE in ${POD_CONDITION_TYPES[*]}; do
 			TYPE_STATUS=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | select(.type=="'$TYPE'") | .status')
