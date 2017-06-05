@@ -32,14 +32,12 @@ exit 2
 while getopts ":t:c:k:h" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
-                c) CREDENTIALS_FILE=${OPTARG} ;;
+                c) CREDENTIALS_FILE="--netrc-file ${OPTARG}" ;;
                 k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
 done
-
-if [ ! -z $TARGET ] && [ -z $CREDENTIALS_FILE ]; then echo "Required argument -c <CREDENTIALSFILE> missing!"; exit 3; fi
 
 # Comment out if you have SSL enabled on your K8 API
 SSL="--insecure"
@@ -52,7 +50,7 @@ if [ -z $TARGET ]; then
 else
 	# k8 API mode
 	# Make call to Kubernetes API to get the status:
-	K8STATUS="$(curl -sS $SSL --netrc-file $CREDENTIALS_FILE $TARGET/api/v1/nodes)"
+	K8STATUS="$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/api/v1/nodes)"
 	if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes API!"; exit 3; fi
 fi
 
