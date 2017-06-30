@@ -128,7 +128,7 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 			#echo "$TYPE_STATUS"
 			#echo "-------------"
 			if [[ "${TYPE_STATUS}" != "True" ]]; then
-				returnResult Warning "Pod: $POD  $TYPE: $TYPE_STATUS"
+				returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"
 			else
 				if [[ "${TYPE}" == "Ready" ]]; then PODS_READY=$((PODS_READY+1)); fi
 				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
