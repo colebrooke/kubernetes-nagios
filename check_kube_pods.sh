@@ -22,8 +22,8 @@ Options:
   -t <TARGETSERVER>	# Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
   -c <CREDENTIALSFILE>	# Required if a <TARGETSERVER> API is specified, in the format outlined below
   -n <NAMESPACE>	# Namespace to check, for example, "kube-system". By default all are checked.
-  -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 5]
-  -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 50]
+  -w <WARN_THRESHOLD>	# Warning threshold for number of container restarts [default: 200]
+  -C <CRIT_THRESHOLD>	# Critical threshold for number of container restarts [default: 1000]
   -k <KUBE_CONFIG>	# Path to kube config file if using kubectl
   -p <POD>		# Search for particular pods only
   -e <NUMBER_PODS>	# Expected number of pods in a ready condition
@@ -41,8 +41,8 @@ exit 2
 SSL="--insecure"
 EXITCODE=0
 # Default thresholds for container restarts
-WARN_THRESHOLD=5
-CRIT_THRESHOLD=50
+WARN_THRESHOLD=200
+CRIT_THRESHOLD=1000
 EXPECTED_PODS=0
 READY_PODS=0
 
