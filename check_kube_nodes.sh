@@ -59,10 +59,11 @@ NODES=$(echo "$K8STATUS" | jq -r '.items[].metadata.name')
 
 function returnResult () {
 	CHECKSTATUS="$1"
-	RESULT=$(echo -e "$CHECKSTATUS: $NODE has condition $CHECK - $STATUS\n$RESULT")
 	if [[ "$CHECKSTATUS" == "Critical" ]] && [ $EXITCODE -le 2 ]; then 
+		RESULT=$(echo -e "$CHECKSTATUS: $NODE has condition $CHECK - $STATUS\n$RESULT")
 		EXITCODE=2
 	elif [[ "$CHECKSTATUS" == "Warning" ]]; then
+		RESULT=$(echo -e "$CHECKSTATUS: $NODE has condition $CHECK - $STATUS\n$RESULT")
 		EXITCODE=1
 	fi
 	}
@@ -86,8 +87,8 @@ done
 
 case $EXITCODE in
 	0) printf "OK - Kubernetes nodes all OK\n" ;;
-	1) printf "WARNING - One or more nodes show warning status!\n" ;;
-	2) printf "CRITICAL - One or more nodes show critical status!\n" ;;
+	1) printf "" ;;
+	2) printf "" ;;
 esac
 
 echo "$RESULT"
