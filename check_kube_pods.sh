@@ -44,7 +44,7 @@ EXITCODE=0
 WARN_THRESHOLD=1000
 CRIT_THRESHOLD=3000
 EXPECTED_PODS=0
-READY_PODS=0
+PODS_READY=0
 
 while getopts ":t:c:hw:C:n:k:p:e:v" OPTIONS; do
         case "${OPTIONS}" in
