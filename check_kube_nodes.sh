@@ -78,6 +78,7 @@ for NODE in ${NODES[*]}; do
 			"OutOfDisk-True") returnResult Warning;;
 			"MemoryPressure-True") returnResult Critical;;
 			"DiskPressure-True") returnResult Critical;;
+			"PIDPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
 			# Note the API only checks these 4 conditions at present. Others can be added here.
 			*) returnResult OK;;
