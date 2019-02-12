@@ -95,9 +95,10 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	DEPLOYMENTS=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[].metadata.name')
 	# Itterate through each deployment
 	for DEPLOYMENT in ${DEPLOYMENTS[*]}; do
-		TYPE=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions[].type' )
-		STATUS=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions[].status' )
-		REASON=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions[].message' )
+		TYPE=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions | sort_by(.lastUpdateTime) | .[-1].type' )
+		STATUS=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions | sort_by(.lastUpdateTime) | .[-1].status' )
+		REASON=$(echo "$DEPLOYMENTS_STATUS" | jq -r '.items[] | select(.metadata.name=="'$DEPLOYMENT'") | .status.conditions | sort_by(.lastUpdateTime) | .[-1].message' )
+
 		# uncomment the following line to test a failure:
 		# if [[ "$DEPLOYMENT" == "kubernetes-dashboard" ]]; then TYPE="Available"; STATUS="False"; fi
 		case "${TYPE}-${STATUS}" in
