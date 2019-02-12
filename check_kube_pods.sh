@@ -121,10 +121,10 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 	# Itterate through each pod
 	for POD in ${PODS[*]}; do
 		POD_STATUS=$(echo "$PODS_STATUS" | jq -r '.items[] | select(.metadata.name | contains("'$POD'"))')
-		POD_CONDITION_TYPES=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | .type')
+		POD_CONDITION_TYPES=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | .type' 2>/dev/null)
 		# Itterate through each condition type
 		for TYPE in ${POD_CONDITION_TYPES[*]}; do
-			TYPE_STATUS=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | select(.type=="'$TYPE'") | .status')
+			TYPE_STATUS=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | select(.type=="'$TYPE'") | .status' 2>/dev/null)
 			#echo "$TYPE_STATUS"
 			#echo "-------------"
 			if [[ "${TYPE_STATUS}" != "True" ]]; then
@@ -134,7 +134,8 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
 			fi
 		done
-		CONTAINERS=$(echo "$POD_STATUS" | jq -r '.status.containerStatuses[].name')
+
+		CONTAINERS=$(echo "$POD_STATUS" | jq -r '.status.containerStatuses[].name' 2>/dev/null)
 		# Itterate through each container
 		for CONTAINER in ${CONTAINERS[*]}; do
 
