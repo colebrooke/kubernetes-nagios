@@ -30,22 +30,24 @@ exit 2
 # Comment out if you have SSL enabled on your K8 API
 SSL="--insecure"
 
-while getopts ":t:c:hk:" OPTIONS; do
+while getopts ":t:c:hk:p:" OPTIONS; do
 	case "${OPTIONS}" in
 		t) TARGET=${OPTARG} ;;
 		c) CREDENTIALS_FILE="--netrc-file ${OPTARG}" ;;
 		h) usage ;;
 		k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
+		p) KUBEPROXYPORT=${OPTARG} ;;
 		*) usage ;;
 	esac
 done
 
 if [ -z $TARGET ]; then 
 	type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run if no API endpoint target is specified"; exit 3; }
-	kubectl $KUBE_CONFIG proxy >/dev/null 2>&1 &
+	KUBEPROXYPORT="${KUBEPROXYPORT:-8001}"
+	kubectl $KUBE_CONFIG proxy --port $KUBEPROXYPORT >/dev/null 2>&1 &
 	PROXY_PID=$!
 	sleep 1
-	TARGET="http://127.0.0.1:8001"
+	TARGET="http://127.0.0.1:${KUBEPROXYPORT}"
 fi
 
 HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz)
