@@ -103,7 +103,9 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 		# if [[ "$DEPLOYMENT" == "kubernetes-dashboard" ]]; then TYPE="Available"; STATUS="False"; fi
 		case "${TYPE}-${STATUS}" in
 			"Available-True") returnResult OK;;
+			"Progressing-True") returnResult OK;;
 			"Available-False") returnResult Warning;;
+			"Progressing-False") returnResult Warning;;
 			*) returnResult Unknown ;;
 		esac
 	done
