@@ -77,12 +77,21 @@ for NODE in ${NODES[*]}; do
 	for CHECK in ${CHECKS[*]}; do
 		STATUS=$(echo "$K8STATUS" | jq '.items[] | select(.metadata.name=="'$NODE'") | .status.conditions[]'  | jq -r 'select(.type=="'$CHECK'") .status')
 		case "$CHECK-$STATUS" in
-			"OutOfDisk-True") returnResult Warning;;
+			"OutOfDisk-True") returnResult Critical;;
 			"MemoryPressure-True") returnResult Critical;;
 			"DiskPressure-True") returnResult Critical;;
 			"PIDPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
 			# Note the API only checks these 4 conditions at present. Others can be added here.
+			# Only exposed in GKE as of now:
+			"NetworkUnavailable-True") returnResult Critical;;
+			"FrequentDockerRestart-True") returnResult Critical;;
+			"FrequentKubeletRestart-True") returnResult Critical;;
+			"FrequentUnregisterNetDevice-True") returnResult Critical;;
+			"ReadonlyFilesystem-True") returnResult Critical;;
+			"KernelDeadlock-True") returnResult Critical;;
+			"CorruptDockerOverlay2-True") returnResult Critical;;
+			"FrequentContainerdRestart-True") returnResult Critical;;
 			*) returnResult OK;;
 		esac
 	done
