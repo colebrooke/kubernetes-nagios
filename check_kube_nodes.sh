@@ -64,7 +64,9 @@ function returnResult () {
 		EXITCODE=2
 	elif [[ "$CHECKSTATUS" == "Warning" ]]; then
 		RESULT=$(echo -e "$CHECKSTATUS: $NODE has condition $CHECK - $STATUS\n$RESULT")
-		EXITCODE=1
+		if [ $EXITCODE -le 1 ]; then
+			EXITCODE=1
+		fi
 	fi
 	}
 
