@@ -104,7 +104,7 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 		case "${TYPE}-${STATUS}" in
 			"Available-True") returnResult OK;;
 			"Progressing-True") returnResult OK;;
-			"Available-False") returnResult Warning;;
+			"Available-False") returnResult Critcal;;
 			"Progressing-False") returnResult Warning;;
 			*) returnResult Unknown ;;
 		esac
