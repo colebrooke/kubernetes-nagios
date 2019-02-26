@@ -50,6 +50,10 @@ if [ -z $TARGET ]; then
 	TARGET="http://127.0.0.1:${KUBEPROXYPORT}"
 fi
 
+# You can get the full list of available endpoints
+# by curl'ing against http://127.0.0.1:${KUBEPROXYPORT}.
+# Here we use some indicative ones.
+
 HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz)
 BSC_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/bootstrap-controller)
 EXT_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/extensions/third-party-resources)
