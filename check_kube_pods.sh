@@ -128,7 +128,7 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 			#echo "$TYPE_STATUS"
 			#echo "-------------"
 			if [[ "${TYPE_STATUS}" != "True" ]]; then
-				returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"
+				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
 			else
 				if [[ "${TYPE}" == "Ready" ]]; then PODS_READY=$((PODS_READY+1)); fi
 				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
@@ -146,7 +146,7 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 			elif (( $CONTAINER_RESTARTS > $CRIT_THRESHOLD )); then
 				returnResult Critical "Pod: $POD   Container: $CONTAINER    Ready: $CONTAINER_READY   Restarts: $CONTAINER_RESTARTS"
 			elif (( $CONTAINER_RESTARTS > 0 )); then
-				returnResult OK "Pod: $POD   Container: $CONTAINER    Ready: $CONTAINER_READY   Restarts: $CONTAINER_RESTARTS"
+				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD   Container: $CONTAINER    Ready: $CONTAINER_READY   Restarts: $CONTAINER_RESTARTS"; fi
 			fi
 		done	
 	done

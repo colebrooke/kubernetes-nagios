@@ -28,12 +28,13 @@ EOF
 exit 2
 }
 
-while getopts ":t:c:hn:k:" OPTIONS; do
+while getopts ":t:c:hn:k:v" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
 		n) NAMESPACE_TARGET=${OPTARG} ;;
 		k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
+		v) VERBOSE="true" ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -71,10 +72,12 @@ fi
 
 function returnResult () {
 	CHECKSTATUS="$1"
-	RESULT=$(echo -e "$CHECKSTATUS: $DEPLOYMENT has condition $TYPE: $STATUS - $REASON\n$RESULT")
-	if [[ "$CHECKSTATUS" == "Critical" ]] && [ $EXITCODE -le 2 ]; then EXITCODE=2; fi
-	if [[ "$CHECKSTATUS" == "Warning" ]] && [ $EXITCODE -eq 0 ]; then EXITCODE=1; fi
-	if [[ "$CHECKSTATUS" == "Unknown" ]] && [ $EXITCODE -eq 0 ]; then EXITCODE=3; fi
+        if [[ $CHECKSTATUS == "OK" ]] && [[ $VERBOSE == "true" ]]; then
+		RESULT=$(echo -e "$CHECKSTATUS: $DEPLOYMENT has condition $TYPE: $STATUS - $REASON\n$RESULT")
+	fi
+	if [[ "$CHECKSTATUS" == "Critical" ]] && [ $EXITCODE -le 2 ]; then EXITCODE=2; RESULT=$(echo -e "$CHECKSTATUS: $DEPLOYMENT has condition $TYPE: $STATUS - $REASON\n$RESULT"); fi
+	if [[ "$CHECKSTATUS" == "Warning" ]] && [ $EXITCODE -eq 0 ]; then EXITCODE=1; RESULT=$(echo -e "$CHECKSTATUS: $DEPLOYMENT has condition $TYPE: $STATUS - $REASON\n$RESULT"); fi
+	if [[ "$CHECKSTATUS" == "Unknown" ]] && [ $EXITCODE -eq 0 ]; then EXITCODE=3; RESULT=$(echo -e "$CHECKSTATUS: $DEPLOYMENT has condition $TYPE: $STATUS - $REASON\n$RESULT"); fi
 	}
 
 # Itterate through each namespace
@@ -120,7 +123,7 @@ done
 case $EXITCODE in
 	0) printf "OK - Kubernetes deployments are all OK\n" ;;
 	1) printf "WARNING - One or more deployments show warning status!\n" ;;
-	2) printf "CRITICAL - One or more nodes show critical status!\n" ;;
+	2) printf "CRITICAL - One or more deployments show critical status!\n" ;;
 esac
 
 echo "$RESULT"
