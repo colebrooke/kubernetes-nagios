@@ -82,6 +82,7 @@ for NODE in ${NODES[*]}; do
 			"DiskPressure-True") returnResult Critical;;
 			"PIDPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
+			"Ready-Unknown") returnResult Critical;;
 			# Note the API only checks these 4 conditions at present. Others can be added here.
 			# Only exposed in GKE as of now:
 			"NetworkUnavailable-True") returnResult Critical;;
