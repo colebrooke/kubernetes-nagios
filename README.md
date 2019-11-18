@@ -17,14 +17,14 @@ can use kubectl, in which case this will need to be installed and configured.
 ### Options
 
 ```
-    -t <TARGETSERVER> --  Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
-    -c <CREDENTIALSFILE> --  Required if a <TARGETSERVER> API is specified, in the format outlined below
-    -n <NAMESPACE> --  Namespace to check, for example, "kube-system". By default all are checked.
-    -w <WARN_THRESHOLD> --  Warning threshold for number of container restarts [default: 5]
-    -C <CRIT_THRESHOLD> --  Critical threshold for number of container restarts [default: 50]
-    -k <KUBE_CONFIG> --  Path to kube config file if using kubectl
-    -h --  Show usage / help
-    -v --  Show verbose output
+-t <TARGETSERVER> --  Optional, the endpoint for your Kubernetes API (otherwise will use kubectl)
+-c <CREDENTIALSFILE> --  Required if a <TARGETSERVER> API is specified, in the format outlined below
+-n <NAMESPACE> --  Namespace to check, for example, "kube-system". By default all are checked.
+-w <WARN_THRESHOLD> --  Warning threshold for number of container restarts [default: 5]
+-C <CRIT_THRESHOLD> --  Critical threshold for number of container restarts [default: 50]
+-k <KUBE_CONFIG> --  Path to kube config file if using kubectl
+-h --  Show usage / help
+-v --  Show verbose output
 ```
 
 ### Example Output
