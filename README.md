@@ -50,7 +50,7 @@ Warning: Pod: nginx-ingress-controller-v1-dffl3   Container: nginx-ingress-lb   
 
 #### Example Output
 ```
-$ ./check_kube_deployments.sh -t https://api.mykube-cluster.co.uk -c ~/my-credentails
+$ ./check_kube_deployments.sh -t https://api.mykube-cluster.co.uk -c ~/my-credentials
 OK - Kubernetes deployments are all OK
 OK: kubernetes-dashboard-v1.4.0 has condition Available: True - Deployment has minimum availability.
 OK: kubernetes-dashboard has condition Available: True - Deployment has minimum availability.
@@ -70,7 +70,7 @@ This uses the Kubernetes API to check condition statuses across your nodes.
 ```
 #### Example output
 ```
-$ ./kubernetes-nagios ❯❯❯ ./check_kube_nodes.sh -t https://api.mykube-cluster.co.uk -c ~/my-credentails
+$ ./kubernetes-nagios ❯❯❯ ./check_kube_nodes.sh -t https://api.mykube-cluster.co.uk -c ~/my-credentials
 WARNING - One or more nodes show warning status!
 Warning: ip-10-123-81-96.eu-west-1.compute.internal has condition OutOfDisk - True
 Warning: ip-10-123-82-87.eu-west-1.compute.internal has condition OutOfDisk - True
