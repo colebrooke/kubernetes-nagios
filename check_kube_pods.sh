@@ -127,11 +127,11 @@ for NAMESPACE in ${NAMESPACES[*]}; do
 			TYPE_STATUS=$(echo "$POD_STATUS" | jq -r '.status.conditions[] | select(.type=="'$TYPE'") | .status' 2>/dev/null)
 			#echo "$TYPE_STATUS"
 			#echo "-------------"
-			if [[ "${TYPE_STATUS}" != "True" ]]; then
-				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
-			else
+			if [[ "${TYPE_STATUS}" == "True" ]]; then
 				if [[ "${TYPE}" == "Ready" ]]; then PODS_READY=$((PODS_READY+1)); fi
 				if [[ "$VERBOSE" == "true" ]]; then returnResult OK "Pod: $POD  $TYPE: $TYPE_STATUS"; fi
+			else
+				returnResult Critical "Pod: $POD  $TYPE: $TYPE_STATUS"
 			fi
 		done
 
