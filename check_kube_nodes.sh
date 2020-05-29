@@ -79,6 +79,7 @@ for NODE in ${NODES[*]}; do
 			"MemoryPressure-True") returnResult Critical;;
 			"DiskPressure-True") returnResult Critical;;
 			"Ready-False") returnResult Warning;;
+			"Ready-Unknown") returnResult Warning;;
 			# Note the API only checks these 4 conditions at present. Others can be added here.
 			*) returnResult OK;;
 		esac
