@@ -53,7 +53,10 @@ BSC_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/boots
 EXT_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/extensions/third-party-resources)
 BSR_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/rbac/bootstrap-roles)
 
-kill -15 $PROXY_PID
+if [ -n "$PROXY_PID" ]
+then
+    kill -15 $PROXY_PID
+fi
 
 case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in 
 	"ok ok ok") echo "OK - Kubernetes API status is OK" && exit 0;;
