@@ -11,7 +11,9 @@
 #                                                       #
 #########################################################
 
-type jq >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for this script to run."; exit 2; }
+type jq      >/dev/null 2>&1 || { echo >&2 "CRITICAL: The jq utility is required for this script to run."; exit 2; }
+type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run."; exit 2; }
+
 
 function usage {
 cat <<EOF
