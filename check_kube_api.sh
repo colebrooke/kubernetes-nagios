@@ -41,12 +41,12 @@ while getopts ":t:c:hk:p:" OPTIONS; do
 	esac
 done
 
-if [ -z $TARGET ]; then 
+if [ -z $TARGET ]; then
 	type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run if no API endpoint target is specified"; exit 3; }
 	KUBEPROXYPORT="${KUBEPROXYPORT:-8001}"
 	kubectl $KUBE_CONFIG proxy --port $KUBEPROXYPORT >/dev/null 2>&1 &
 	PROXY_PID=$!
-	sleep 1
+	sleep 5
 	TARGET="http://127.0.0.1:${KUBEPROXYPORT}"
 fi
 
@@ -61,9 +61,9 @@ BSR_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/rbac/
 
 kill -15 $PROXY_PID
 
-case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in 
+case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in
 	"ok ok ok") echo "OK - Kubernetes API status is OK" && exit 0;;
-	*) 
+	*)
 		echo "WARNING - Kubernetes API status is not OK!"
 		echo "/healthz - $HEALTH"
 		echo "/healthz/poststarthook/bootstrap-controller - $BSC_HEALTH"
@@ -72,5 +72,3 @@ case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in
 		exit 1
 	;;
 esac
-
-
