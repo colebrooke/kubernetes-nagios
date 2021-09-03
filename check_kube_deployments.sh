@@ -28,12 +28,13 @@ EOF
 exit 2
 }
 
-while getopts ":t:c:hn:k:" OPTIONS; do
+while getopts ":t:c:hn:k:x:" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE=${OPTARG} ;;
                 n) NAMESPACE_TARGET=${OPTARG} ;;
                 k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
+                x) KUBE_CONTEXT="--context ${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -83,9 +84,9 @@ for NAMESPACE in ${NAMESPACES[*]}; do
     if [[ -z $TARGET ]]; then
         # kubectl mode
         if [[ "$ALL_NAMESPACE_OPTION" == "true" ]]; then
-            DEPLOYMENTS_STATUS=$(kubectl $KUBE_CONFIG get deployments --all-namespaces -o json)
+            DEPLOYMENTS_STATUS=$(kubectl $KUBE_CONFIG $KUBE_CONTEXT get deployments --all-namespaces -o json)
         else
-            DEPLOYMENTS_STATUS=$(kubectl $KUBE_CONFIG get deployments --namespace $NAMESPACE -o json)
+            DEPLOYMENTS_STATUS=$(kubectl $KUBE_CONFIG $KUBE_CONTEXT get deployments --namespace $NAMESPACE -o json)
         fi
     else
         # api mode

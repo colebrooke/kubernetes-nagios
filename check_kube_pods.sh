@@ -46,7 +46,7 @@ CRIT_THRESHOLD=3000
 EXPECTED_PODS=0
 PODS_READY=0
 
-while getopts ":t:c:hw:C:n:k:p:e:v" OPTIONS; do
+while getopts ":t:c:hw:C:n:k:x:p:e:v" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE="--netrc-file ${OPTARG}" ;;
@@ -55,6 +55,7 @@ while getopts ":t:c:hw:C:n:k:p:e:v" OPTIONS; do
                 n) NAMESPACE_TARGET=${OPTARG} ;;
                 v) VERBOSE="true" ;;
                 k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
+                x) KUBE_CONTEXT="--context ${OPTARG}" ;;
                 p) POD_SEARCH="${OPTARG}" ;;
                 e) EXPECTED_PODS=${OPTARG} ;;
                 h) usage ;;
@@ -101,9 +102,9 @@ for NAMESPACE in ${NAMESPACES[*]}; do
     if [[ -z $TARGET ]]; then
         # kubectl mode
         if [[ "$ALL_NAMESPACE_OPTION" == "true" ]]; then
-            PODS_STATUS=$(kubectl $KUBE_CONFIG get pods --all-namespaces -o json)
+            PODS_STATUS=$(kubectl $KUBE_CONFIG $KUBE_CONTEXT get pods --all-namespaces -o json)
         else
-            PODS_STATUS=$(kubectl $KUBE_CONFIG get pods --namespace $NAMESPACE -o json)
+            PODS_STATUS=$(kubectl $KUBE_CONFIG $KUBE_CONTEXT get pods --namespace $NAMESPACE -o json)
         fi
 
     else

@@ -31,11 +31,12 @@ EOF
 exit 2
 }
 
-while getopts ":t:c:k:h" OPTIONS; do
+while getopts ":t:c:k:x:h" OPTIONS; do
         case "${OPTIONS}" in
                 t) TARGET=${OPTARG} ;;
                 c) CREDENTIALS_FILE="--netrc-file ${OPTARG}" ;;
                 k) KUBE_CONFIG="--kubeconfig ${OPTARG}" ;;
+                x) KUBE_CONTEXT="--context ${OPTARG}" ;;
                 h) usage ;;
                 *) usage ;;
         esac
@@ -47,7 +48,7 @@ EXITCODE=0
 
 if [ -z $TARGET ]; then
     # kubectl mode
-    K8STATUS="$(kubectl $KUBE_CONFIG get nodes -o json)"
+    K8STATUS="$(kubectl $KUBE_CONFIG $KUBE_CONTEXT get nodes -o json)"
     if [ $(echo "$K8STATUS" | wc -l) -le 30 ]; then echo "CRITICAL - unable to connect to Kubernetes via kubectl!"; exit 3; fi
 else
     # k8 API mode
