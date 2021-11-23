@@ -43,7 +43,8 @@ done
 
 if [ -z $TARGET ]; then
     type kubectl >/dev/null 2>&1 || { echo >&2 "CRITICAL: The kubectl utility is required for this script to run if no API endpoint target is specified"; exit 3; }
-    kubectl $KUBE_CONFIG $KUBE_CONTEXT proxy >/dev/null 2>&1 &
+    TEMP_KUBECTL_LOG=$(mktemp -p /tmp check_kube_api.kubectl.log.XXXXXXXX)
+    kubectl $KUBE_CONFIG $KUBE_CONTEXT proxy > $TEMP_KUBECTL_LOG 2>&1 &
     PROXY_PID=$!
     sleep 1
     TARGET="http://127.0.0.1:8001"
@@ -57,12 +58,15 @@ BSR_HEALTH=$(curl -sS $SSL $CREDENTIALS_FILE $TARGET/healthz/poststarthook/rbac/
 if [ -n "$PROXY_PID" ]
 then
     kill -15 $PROXY_PID
+    KUBECTL_LOG=$(cat $TEMP_KUBECTL_LOG)
+    rm $TEMP_KUBECTL_LOG
 fi
 
 case "$HEALTH $BSC_HEALTH $BSR_HEALTH" in
     "ok ok ok") echo "OK - Kubernetes API status is OK" && exit 0;;
     *)
         echo "WARNING - Kubernetes API status is not OK!"
+        [ -n $KUBECTL_LOG ] && echo "Kubectl proxy log - $KUBECTL_LOG"
         echo "/healthz - $HEALTH"
         echo "/healthz/poststarthook/bootstrap-controller - $BSC_HEALTH"
         echo "/healthz/poststarthook/extensions/third-party-resources - $EXT_HEALTH"
