@@ -88,7 +88,7 @@ This check returns the health status of the overall cluster.
 ### Usage
 
 ```bash
-./check_kubernetes_api.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>]
+./check_kubernetes_api.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG> -x <KUBE_CONTEXT>]
 ```
 
 ## Dependencies
