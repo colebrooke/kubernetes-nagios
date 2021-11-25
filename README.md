@@ -11,7 +11,7 @@ can use kubectl, in which case this will need to be installed and configured.
 ### Usage
 
 ```bash
-./check_kube_pods.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>] [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD>]
+./check_kube_pods.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG> -x <KUBE_CONTEXT>] [-n <NAMESPACE>] [-w <WARN_THRESHOLD>] [-C <CRIT_THRESHOLD>]
 ```
 
 ### Options
@@ -50,7 +50,7 @@ Warning: Pod: nginx-ingress-controller-v1-dffl3   Container: nginx-ingress-lb   
 ### Usage
 
 ```bash
-./check_kube_deployments.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>]
+./check_kube_deployments.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG> -x <KUBE_CONTEXT>]
 ```
 
 ```bash
@@ -71,7 +71,7 @@ This uses the Kubernetes API to check condition statuses across your nodes.
 ### Usage
 
 ```bash
-./check_kube_nodes.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>]
+./check_kube_nodes.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG> -x <KUBE_CONTEXT>]
 ```
 
 ```bash
@@ -88,7 +88,7 @@ This check returns the health status of the overall cluster.
 ### Usage
 
 ```bash
-./check_kubernetes_api.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG>]
+./check_kubernetes_api.sh [-t <TARGETSERVER> -c <CREDENTIALSFILE>] [-k <KUBE_CONFIG> -x <KUBE_CONTEXT>]
 ```
 
 ## Dependencies
